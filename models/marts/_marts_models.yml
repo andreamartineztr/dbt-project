@@ -1,0 +1,59 @@
+version: 2
+
+models:
+  - name: dim_customer
+    description: Dimensión cliente (incluye nación y región).
+    columns:
+      - name: customer_key
+        tests: [unique, not_null]
+
+  - name: dim_supplier
+    description: Dimensión proveedor (incluye nación y región).
+    columns:
+      - name: supplier_key
+        tests: [unique, not_null]
+
+  - name: dim_part
+    description: Dimensión pieza.
+    columns:
+      - name: part_key
+        tests: [unique, not_null]
+
+  - name: dim_date
+    description: Dimensión calendario.
+    columns:
+      - name: date_key
+        tests: [unique, not_null]
+
+  - name: fct_order_lines
+    description: "Tabla de hechos. Granularidad: línea de pedido."
+    columns:
+      - name: order_line_key
+        tests: [unique, not_null]
+      - name: customer_key
+        tests:
+          - not_null
+          - relationships: {to: ref('dim_customer'), field: customer_key}
+      - name: part_key
+        tests:
+          - not_null
+          - relationships: {to: ref('dim_part'), field: part_key}
+      - name: supplier_key
+        tests:
+          - not_null
+          - relationships: {to: ref('dim_supplier'), field: supplier_key}
+      - name: order_date_key
+        tests:
+          - not_null
+          - relationships: {to: ref('dim_date'), field: date_key}
+      - name: ship_date_key
+        tests:
+          - relationships: {to: ref('dim_date'), field: date_key}
+      - name: order_status
+        tests:
+          - accepted_values: {values: ['F', 'O', 'P']}
+      - name: net_revenue
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"

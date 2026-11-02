@@ -1,0 +1,32 @@
+name: 'tpch_dwh'
+version: '1.0.0'
+config-version: 2
+profile: 'tpch_dwh'
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+analysis-paths: ["analyses"]
+seed-paths: ["seeds"]
+snapshot-paths: ["snapshots"]
+
+clean-targets: ["target", "dbt_packages"]
+
+# Variable usada para DEMOSTRAR la carga incremental de stg_orders (ver README)
+vars:
+  initial_load_until: null
+
+models:
+  tpch_dwh:
+    staging:
+      +materialized: table        # Staging: siempre tablas
+      +schema: staging
+      +tags: ['staging']
+    intermediate:
+      +materialized: view         # Transformation: vistas 
+      +schema: intermediate
+      +tags: ['intermediate']
+    marts:
+      +materialized: table        
+      +schema: marts
+      +tags: ['marts']

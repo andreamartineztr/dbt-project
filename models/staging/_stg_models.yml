@@ -1,0 +1,79 @@
+version: 2
+
+models:
+  - name: stg_customer
+    description: Clientes (carga total).
+    columns:
+      - name: customer_key
+        tests: [unique, not_null]
+      - name: nation_key
+        tests:
+          - not_null
+          - relationships: {to: ref('stg_nation'), field: nation_key}
+
+  - name: stg_lineitem
+    description: Líneas de pedido (carga total). Clave compuesta order_key + line_number.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [order_key, line_number]
+    columns:
+      - name: order_key
+        tests: [not_null]
+      - name: part_key
+        tests: [not_null]
+      - name: supplier_key
+        tests: [not_null]
+      - name: discount
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "between 0 and 1"
+      - name: quantity
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "> 0"
+      - name: return_flag
+        tests:
+          - accepted_values: {values: ['R', 'A', 'N']}
+
+  - name: stg_nation
+    description: Países (carga total).
+    columns:
+      - name: nation_key
+        tests: [unique, not_null]
+
+  - name: stg_orders
+    description: Pedidos. ÚNICA entidad con carga INCREMENTAL (merge por order_key).
+    columns:
+      - name: order_key
+        tests: [unique, not_null]
+      - name: customer_key
+        tests:
+          - not_null
+          - relationships: {to: ref('stg_customer'), field: customer_key}
+      - name: order_status
+        tests:
+          - accepted_values: {values: ['F', 'O', 'P']}
+
+  - name: stg_part
+    description: Piezas (carga total).
+    columns:
+      - name: part_key
+        tests: [unique, not_null]
+
+  - name: stg_partsupp
+    description: Relación pieza-proveedor (carga total).
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [part_key, supplier_key]
+
+  - name: stg_region
+    description: Regiones (carga total).
+    columns:
+      - name: region_key
+        tests: [unique, not_null]
+
+  - name: stg_supplier
+    description: Proveedores (carga total).
+    columns:
+      - name: supplier_key
+        tests: [unique, not_null]
